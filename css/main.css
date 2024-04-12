@@ -1,0 +1,31 @@
+.page_header {
+    margin-bottom: 10px;
+}
+
+.ip_form {
+    margin-bottom: 10px;
+}
+
+.ip_list .list-group {
+    margin-bottom: 10px;
+}
+
+.ip_btn_collapse {
+    margin-right: 5px;
+}
+
+.ip_info_collapse {
+    margin-top: 10px;
+}
+
+.form__errors {
+    color:rgb(219, 4, 47);
+}
+
+.form__message {
+    color:rgb(2, 187, 33)
+}
+
+.col_name {
+    font-weight: bold;
+}
