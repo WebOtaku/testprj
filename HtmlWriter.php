@@ -55,28 +55,32 @@ class HtmlWriter
     {
         $ipListHTML = '';
 
-        foreach ($ipData as $i => $ipInfo) {
-            $ipListHTML .= '<li class="list-group-item">';
+        if (count($ipData)) {
+            foreach ($ipData as $i => $ipInfo) {
+                $ipListHTML .= '<li class="list-group-item">';
 
-            $col_str = IpGeoConst::DB_COLS_STR[IpGeoConst::DB_COLS[0]];
-            $val = ($ipInfo[0]) ? $ipInfo[0] : IpGeoConst::DEFAULT_STR;
+                $col_str = IpGeoConst::DB_COLS_STR[IpGeoConst::DB_COLS[0]];
+                $val = ($ipInfo[0]) ? $ipInfo[0] : IpGeoConst::DEFAULT_STR;
 
-            $ipListHTML .= '<button class="btn btn-primary ip_btn_collapse" type="button" 
-                data-bs-toggle="collapse" data-bs-target="#collapse' . $i . '">' . 
-                $col_str . ': ' . $val . '</button>';
+                $ipListHTML .= '<div class="ip_list__item_controls"><button class="control_btn btn btn-primary ip_btn_collapse" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#collapse' . $i . '">' . 
+                    $col_str . ': ' . $val . '</button>';
 
-            //$ipListHTML .= '<button class="btn btn-danger ip_btn_del" type="button">Удалить</button>';
+                $ipListHTML .= '<a href="?action=delete&ip='. $val .'" class="control_link link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Удалить</a></div>';
 
-            $ipListHTML .= '<div class="collapse ip_info_collapse" id="collapse' . $i . '">
-                <div class="card card-body">';
-            for ($j = 1; $j < count($ipInfo); $j++) {
-                $col_str = IpGeoConst::DB_COLS_STR[IpGeoConst::DB_COLS[$j]];
-                $val = ($ipInfo[$j]) ? $ipInfo[$j] : IpGeoConst::DEFAULT_STR;
-                $ipListHTML .= '<p><span class="col_name">' . $col_str .
-                    '</span>: <span class="col_val">' . $val . '</span></p>';
+                $ipListHTML .= '<div class="collapse ip_info_collapse" id="collapse' . $i . '">
+                    <div class="card card-body">';
+                for ($j = 1; $j < count($ipInfo); $j++) {
+                    $col_str = IpGeoConst::DB_COLS_STR[IpGeoConst::DB_COLS[$j]];
+                    $val = ($ipInfo[$j]) ? $ipInfo[$j] : IpGeoConst::DEFAULT_STR;
+                    $ipListHTML .= '<p><span class="col_name">' . $col_str .
+                        '</span>: <span class="col_val">' . $val . '</span></p>';
+                }
+                $ipListHTML .= '</div></div>';
+                $ipListHTML .= '</li>';
             }
-            $ipListHTML .= '</div></div>';
-            $ipListHTML .= '</li>';
+        } else {
+            $ipListHTML = '<h3>Список пуст</h2>';
         }
 
         return $ipListHTML;
@@ -94,24 +98,28 @@ class HtmlWriter
      */
     public static function getPaginationHTML(int $page, int $totalPages): string
     {
-        $paginationHTML = '<nav><ul class="pagination">';
-                    
-        if ($page >= 2) {
-            $paginationHTML .= '<li class="page-item">
-                <a class="page-link" href="?page='. ($page - 1) .'">
-                <span>&laquo;</span></a></li>';
-        }
+        $paginationHTML = '';
 
-        $paginationHTML .= '<li class="page-item"><a class="page-link" href="#">
-            ' . $page . '/' . $totalPages . '</a></li>';
-                    
-        if ($page < $totalPages) {
-            $paginationHTML .= '<li class="page-item">
-                <a class="page-link" href="?page='. ($page + 1) .'">
-                <span>&raquo;</span></a></li>';
-        }
+        if ($totalPages) {
+            $paginationHTML = '<nav><ul class="pagination">';
+                        
+            if ($page >= 2) {
+                $paginationHTML .= '<li class="page-item">
+                    <a class="page-link" href="?page='. ($page - 1) .'">
+                    <span>&laquo;</span></a></li>';
+            }
 
-        $paginationHTML .= '</ul></nav>';
+            $paginationHTML .= '<li class="page-item"><a class="page-link" href="#">
+                ' . $page . '/' . $totalPages . '</a></li>';
+                        
+            if ($page < $totalPages) {
+                $paginationHTML .= '<li class="page-item">
+                    <a class="page-link" href="?page='. ($page + 1) .'">
+                    <span>&raquo;</span></a></li>';
+            }
+
+            $paginationHTML .= '</ul></nav>';
+        }
 
         return $paginationHTML;
     }

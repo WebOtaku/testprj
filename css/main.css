@@ -29,3 +29,10 @@
 .col_name {
     font-weight: bold;
 }
+
+.ip_list__item_controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}

@@ -15,10 +15,14 @@ class IPGeoConst
     public const DEFAULT_STR = 'Неизвестно';
     public const IP_LIST_STR = 'Список IP-адрессов';
     public const INPUT_IP_ERR = 'Введите IP-адресс';
+    public const INPUT_CORRECT_IP_ERR = 'Укажите корректный IP-адресс';
     public const IP_EXIST_ERR = 'Указанный IP-адресс уже добавлен';
+    public const IP_DELETE_ERR = 'Ошибка удаления IP-адреса';
+    public const UNKNOWN_IP_ERR = 'Неизвестный IP-адресс';
     public const DB_CONNECT_ERR = 'Ошибка подключения к БД';
     public const DB_ERR = 'Ошибка при обращении к БД';
     public const IP_ADD_MSG = 'IP-адресс успешно добавлен';
+    public const IP_DELETE_MSG = 'Успешно удалён IP-адресс';
     public const SUBMIT_BTN_STR = 'Добавить';
     public const DB_TABLE = 'ip_geo';
     public const IP_COL = 'ip';
@@ -39,5 +43,5 @@ class IPGeoConst
         'region' => self::REGION_STR,
         'city' => self::CITY_STR
     ];
-    public const PER_PAGE = 3;
+    public const PER_PAGE = 4;
 }

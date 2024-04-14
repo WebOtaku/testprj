@@ -75,7 +75,7 @@ class IPGeo
             curl_close($ch);
             $res['val'] = json_decode($response);
         } else {
-            $res['error'] = 'Введите корректный IP-адресс';
+            $res['error'] = IPGeoConst::INPUT_CORRECT_IP_ERR;
         }
 
         return $res;
@@ -126,7 +126,7 @@ class IPGeo
     /* 
     * Добавляет IP-адресс и информацию о его местоположении в базу данных
     * Принимает на вход: 
-    *     array $formData - массив с данными из формы добавления IP-адресса
+    *     array $formData - массив с данными из формы добавления IP-адреса ($_POST)
     * Возвращает массив состоящий из: 
     *     array $errors - массива с ошибками,
     *     string $message - сообщение об выполненном действии
@@ -191,6 +191,61 @@ class IPGeo
     }
 
     /* 
+     * Удаляет указанный IP-адресс из БД
+     * Принимает на вход: 
+     *     array $urlData - массив с URL-параметрами ($_GET)
+     * Возвращает массив состоящий из: 
+     *     array $errors - массива с ошибками,
+     *     string $message - сообщение об выполненном действии
+     */
+    public static function deleteIP(array $urlData): array
+    {
+        $errors = [];
+        $message = '';
+
+        if (key_exists('ip', $urlData)) {
+            if (filter_var($urlData['ip'], FILTER_VALIDATE_IP)) {
+                $conf = IPGeo::parseConfigIni(IPGeoConst::CONF_FILE_NAME);
+
+                list($db, $errors) = self::connection(
+                    $conf['db_host'],
+                    $conf['db_username'],
+                    $conf['db_password'],
+                    $conf['db_name'],
+                    $errors
+                );
+
+                $ip = $urlData['ip'];
+                $ip_col = IPGeoConst::IP_COL;
+                $table = IPGeoConst::DB_TABLE;
+
+                try {
+                    $query = "SELECT $ip_col FROM $table WHERE $ip_col = '$ip'";
+                    $temp = $db->query($query);
+                    if ($temp) {
+                        if ($temp->num_rows) {
+                            $query = "DELETE FROM $table WHERE $ip_col = '$ip'";
+                            if ($db->query($query)) {
+                                $message = IPGeoConst::IP_DELETE_MSG . ": $ip";
+                            } 
+                        } else {
+                            array_push($errors, IPGeoConst::UNKNOWN_IP_ERR . ": $ip");
+                        }
+                    }
+                } catch (Exception $e) {
+                    array_push($errors, IPGeoConst::IP_DELETE_ERR);
+                }
+
+                $db->close();
+            } else {
+                array_push($errors, IPGeoConst::INPUT_CORRECT_IP_ERR);
+            }
+        }
+
+        return [$errors, $message];
+    }
+
+    /* 
     * Возвращает данный по IP-адрессам с постраничным разделением
     * Принимает на вход: 
     *     int $page - номер текущей страницы
@@ -231,28 +286,30 @@ class IPGeo
             $query = "SELECT * FROM $table";
             $temp = $db->query($query);
             if ($temp) {
-                $total_items = count($temp->fetch_all());
+                $total_items = $temp->num_rows;
             }
         } catch (Exception $e) {
             $errorMsg = '<b>' . IPGeoConst::DB_ERR . '</b>: ' . $e->getMessage();
             array_push($errors, $errorMsg);
         }
 
-        $totalPages = ceil($total_items / $per_page);
-        if ($page > $totalPages) $page = $totalPages;
+        if ($total_items) {
+            $totalPages = ceil($total_items / $per_page);
+            if ($page > $totalPages) $page = $totalPages;
 
-        $initial_page = ($page - 1) * $per_page;
+            $initial_page = ($page - 1) * $per_page;
 
-        try {
-            $query = "SELECT * FROM $table LIMIT $initial_page, $per_page";
-            $result = $db->query($query);
-        } catch (Exception $e) {
-            $errorMsg = '<b>' . IPGeoConst::DB_ERR . '</b>: ' . $e->getMessage();
-            array_push($errors, $errorMsg);
-        }
-        
-        if ($result) {
-            $ipData = $result->fetch_all();
+            try {
+                $query = "SELECT * FROM $table LIMIT $initial_page, $per_page";
+                $result = $db->query($query);
+            } catch (Exception $e) {
+                $errorMsg = '<b>' . IPGeoConst::DB_ERR . '</b>: ' . $e->getMessage();
+                array_push($errors, $errorMsg);
+            }
+            
+            if ($result) {
+                $ipData = $result->fetch_all();
+            }
         }
         
         $db->close();

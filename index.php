@@ -6,11 +6,19 @@ namespace TestPrj;
 
 require_once 'autoloader.php';
 
-if (count($_POST)) {
-    list($errors, $message) = IpGeo::addIP($_POST);
-} else {
-    $errors = [];
-    $message = '';
+$errors = [];
+$message = '';
+
+if (count($_GET)) {
+    if (key_exists('action', $_GET)) {
+        if ($_GET['action'] === 'delete') {
+            list($errors, $message) = IpGeo::deleteIP($_GET);
+        } elseif ($_GET['action'] === 'add') {
+            if (count($_POST)) {
+                list($errors, $message) = IpGeo::addIP($_POST);
+            }
+        }
+    }
 }
 
 $page = (isset($_GET['page']) && is_numeric($_GET['page'])) ? (int) $_GET['page'] : 1;
@@ -34,10 +42,10 @@ list($ipData, $page, $totalPages, $errors) = IPGeo::getPaginationIpData($page, $
 <body>
     <div class="container">
         <h3 class="page_header"><?= IpGeoConst::IP_LIST_STR ?></h3>
-        <form class="form ip_form" method="POST">
+        <form class="form ip_form" action="?action=add" method="POST">
             <div class="row g-3 align-items-center">
                 <div class="col-auto">
-                    <label for="ip" class="col-form-label"><?= IpGeoConst::IP_STR ?></label>
+                    <label for="ip" class="col-form-label"><b><?= IpGeoConst::IP_STR ?></b></label>
                 </div>
                 <div class="col-auto">
                     <input type="text" id="ip" class="form-control" name="ip">
