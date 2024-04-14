@@ -6,10 +6,7 @@ namespace TestPrj;
 
 class IPGeoConst
 {
-    public const HOST = 'localhost';
-    public const LOGIN = 'root';
-    public const PASSWORD = '';
-    public const DB_NAME = 'testprj';
+    public const CONF_FILE_NAME = 'config.ini';
     public const TITLE = 'IP Геолакация';
     public const IP_STR = 'IP';
     public const COUNTRY_STR = 'Страна';
@@ -19,6 +16,8 @@ class IPGeoConst
     public const IP_LIST_STR = 'Список IP-адрессов';
     public const INPUT_IP_ERR = 'Введите IP-адресс';
     public const IP_EXIST_ERR = 'Указанный IP-адресс уже добавлен';
+    public const DB_CONNECT_ERR = 'Ошибка подключения к БД';
+    public const DB_ERR = 'Ошибка при обращении к БД';
     public const IP_ADD_MSG = 'IP-адресс успешно добавлен';
     public const SUBMIT_BTN_STR = 'Добавить';
     public const DB_TABLE = 'ip_geo';

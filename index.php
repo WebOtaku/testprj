@@ -15,7 +15,7 @@ if (count($_POST)) {
 
 $page = (isset($_GET['page']) && is_numeric($_GET['page'])) ? (int) $_GET['page'] : 1;
 
-list($ip_data, $page, $total_pages, $errors) = IPGeo::getPaginationIpData($page, $errors);
+list($ipData, $page, $totalPages, $errors) = IPGeo::getPaginationIpData($page, $errors);
 
 ?>
 
@@ -46,69 +46,16 @@ list($ip_data, $page, $total_pages, $errors) = IPGeo::getPaginationIpData($page,
                     <button type="submit" class="btn btn-primary"><?= IpGeoConst::SUBMIT_BTN_STR ?></button>
                 </div>
                 <div class="col-auto">
-                    <?php
-                    if (count($errors)) {
-                        echo '<div class="form__errors">*' . implode(', ', $errors) . '</div>';
-                    }
-                    if (!empty($message)) {
-                        echo '<div class="form__message">*' . $message . '</div>';
-                    }
-                    ?>
+                    <?= HtmlWriter::getErrorsHTML($errors); ?>
+                    <?= HtmlWriter::getMessageHTML($message); ?>
                 </div>
             </div>
         </form>
         <div class="ip_list">
             <ul class="list-group">
-                <?php
-                foreach ($ip_data as $i => $ip_info) {
-                    echo '<li class="list-group-item">';
-
-                    $col_str = IpGeoConst::DB_COLS_STR[IpGeoConst::DB_COLS[0]];
-                    $val = ($ip_info[0]) ? $ip_info[0] : IpGeoConst::DEFAULT_STR;
-                    
-                    echo '<button class="btn btn-primary ip_btn_collapse" type="button" 
-                    data-bs-toggle="collapse" data-bs-target="#collapse'.$i.'">' .
-                        $col_str . ': ' . $val
-                    . '</button>';
-
-                    //echo '<button class="btn btn-danger ip_btn_del" type="button">Удалить</button>';
-
-                    echo '<div class="collapse ip_info_collapse" id="collapse'.$i.'">
-                    <div class="card card-body">';
-                    for ($j = 1; $j < count($ip_info); $j++) {
-                        $col_str = IpGeoConst::DB_COLS_STR[IpGeoConst::DB_COLS[$j]];
-                        $val = ($ip_info[$j]) ? $ip_info[$j] : IpGeoConst::DEFAULT_STR;
-                        echo '<p><span class="col_name">'.$col_str.
-                        '</span>: <span class="col_val">'.$val.'</span></p>';
-                    }
-                    echo '</div></div>';
-                    echo '</li>';
-                }
-                ?>
+                <?= HtmlWriter::getIPListHTML($ipData); ?>
             </ul>
-            <nav>
-                <ul class="pagination">
-                    <?php
-                    if ($page >= 2) {
-                        echo '<li class="page-item">
-                                  <a class="page-link" href="?page='
-                                  . ($page - 1) .'"><span>&laquo;</span></a>
-                              </li>';
-                    }
-                    ?>
-                    <li class="page-item">
-                        <a class="page-link" href="#"><?= "$page/$total_pages" ?></a>
-                    </li>
-                    <?php
-                    if ($page < $total_pages) {
-                        echo '<li class="page-item">
-                                  <a class="page-link" href="?page=' 
-                                  . ($page + 1) .'"><span>&raquo;</span></a>
-                              </li>';
-                    }
-                    ?>
-                </ul>
-            </nav>
+            <?= HtmlWriter::getPaginationHTML($page, $totalPages); ?>
         </div>
     </div>
     <script src="js/bootstrap.min.js"></script>
