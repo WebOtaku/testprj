@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TestPrj;
 
-use stdClass, Exception, mysqli;
+use stdClass, Exception, mysqli, PDO, PDOException;
 
 class IPGeo 
 {
@@ -43,10 +43,22 @@ class IPGeo
         
         $db = NULL;
 
+        // MySQL Connection
+        // try {
+        //     $db = @new mysqli($host, $username, $password, $dbName);
+        // } catch (Exception $e) {
+        //     $errorMsg = '<b>' . IPGeoConst::DB_CONNECT_ERR . '</b>: ' . $e->getMessage();
+        //     array_push($errors, $errorMsg);
+        // }
+
+        // PDO Connection (MS MySQL Server Azure)
         try {
-            $db = @new mysqli($host, $username, $password, $dbName);
-        } catch (Exception $e) {
-            $errorMsg = '<b>' . IPGeoConst::DB_CONNECT_ERR . '</b>: ' . $e->getMessage();
+            $db = new PDO("sqlsrv:server = $host; Database = $dbName", $username, $password);
+            $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch (PDOException $e) {
+            // print("Error connecting to SQL Server.");
+            // die(print_r($e));
+            $errorMsg = '<b>' . IPGeoConst::DB_CONNECT_ERR . '</b>: ' . $e;
             array_push($errors, $errorMsg);
         }
 
@@ -160,10 +172,10 @@ class IPGeo
                     $ipInfo = self::createIPInfoObj($res['val']);
 
                     $cols = implode(',', IpGeoConst::DB_COLS);
-                    $values = '"' . $formData['ip'] . '"';
+                    $values = "'{$formData['ip']}'";
                     foreach (IpGeoConst::DB_COLS_REF as $propertyName) {
                         if ($ipInfo->$propertyName !== IpGeoConst::DEFAULT_STR) {
-                            $values .= ',"' . $ipInfo->$propertyName . '"';
+                            $values .= ",'{$ipInfo->$propertyName}'";
                         } else {
                             $values .= ',NULL';
                         }
@@ -185,7 +197,8 @@ class IPGeo
             array_push($errors, IpGeoConst::INPUT_IP_ERR);
         }
 
-        $db->close();
+        //$db->close(); // MySQL
+        $db = null; // PDO
 
         return [$errors, $message];
     }
@@ -223,7 +236,8 @@ class IPGeo
                     $query = "SELECT $ip_col FROM $table WHERE $ip_col = '$ip'";
                     $temp = $db->query($query);
                     if ($temp) {
-                        if ($temp->num_rows) {
+                        //if (count($temp->fetch_all())) { // MySQL
+                        if (count($temp->fetchAll())) { // PDO
                             $query = "DELETE FROM $table WHERE $ip_col = '$ip'";
                             if ($db->query($query)) {
                                 $message = IPGeoConst::IP_DELETE_MSG . ": $ip";
@@ -232,11 +246,13 @@ class IPGeo
                             array_push($errors, IPGeoConst::UNKNOWN_IP_ERR . ": $ip");
                         }
                     }
+                    $temp = null; // PDO
                 } catch (Exception $e) {
                     array_push($errors, IPGeoConst::IP_DELETE_ERR);
                 }
 
-                $db->close();
+                //$db->close(); // MySQL
+                $db = null; // PDO
             } else {
                 array_push($errors, IPGeoConst::INPUT_CORRECT_IP_ERR);
             }
@@ -268,7 +284,7 @@ class IPGeo
             $errors
         );
 
-        $result = NULL;
+        $result = null;
         $ipData = [];
         $totalPages = 0;
 
@@ -286,8 +302,10 @@ class IPGeo
             $query = "SELECT * FROM $table";
             $temp = $db->query($query);
             if ($temp) {
-                $total_items = $temp->num_rows;
+                //$total_items = count($temp->fetch_all()); // MySQL
+                $total_items = count($temp->fetchAll()); // PDO
             }
+            $temp = null; // PDO
         } catch (Exception $e) {
             $errorMsg = '<b>' . IPGeoConst::DB_ERR . '</b>: ' . $e->getMessage();
             array_push($errors, $errorMsg);
@@ -300,19 +318,34 @@ class IPGeo
             $initial_page = ($page - 1) * $per_page;
 
             try {
-                $query = "SELECT * FROM $table LIMIT $initial_page, $per_page";
+                //$query = "SELECT * FROM $table LIMIT $initial_page, $per_page"; // MySQL
+                
+                $from = $initial_page + 1; // PDO MS SQL Server
+                $to = $per_page * $page; // PDO MS SQL Server
+
+                $cols = implode(', ', IPGeoConst::DB_COLS);
+
+                $query = "SELECT $cols FROM
+                    (
+                        SELECT ROW_NUMBER() OVER (ORDER BY (SELECT 0)) as [Count], * FROM $table
+                    ) as a
+                    WHERE [Count] BETWEEN $from and $to"; // PDO MS SQL Server
                 $result = $db->query($query);
             } catch (Exception $e) {
                 $errorMsg = '<b>' . IPGeoConst::DB_ERR . '</b>: ' . $e->getMessage();
                 array_push($errors, $errorMsg);
             }
             
+            
             if ($result) {
-                $ipData = $result->fetch_all();
+                //$ipData = $result->fetch_all(); // MySQL
+                $ipData = $result->fetchAll(PDO::FETCH_NUM);
+                $result = null; // PDO
             }
         }
         
-        $db->close();
+        //$db->close(); // MySQL
+        $db = null; // PDO
 
         return [$ipData, $page, (int) $totalPages, $errors];
     }

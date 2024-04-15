@@ -56,6 +56,7 @@ class HtmlWriter
         $ipListHTML = '';
 
         if (count($ipData)) {
+            
             foreach ($ipData as $i => $ipInfo) {
                 $ipListHTML .= '<li class="list-group-item">';
 
